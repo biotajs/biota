@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.build.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./lib"
+  },
+  "references": [
+    {
+      "path": "../biota-builder/tsconfig.build.json"
+    },
+    {
+      "path": "../biota-constants/tsconfig.build.json"
+    },
+    {
+      "path": "../biota-helpers/tsconfig.build.json"
+    }
+  ],
+  "include": ["./src/**/*", "./src/**/*.json", "package.json"],
+  "exclude": ["node_modules", "./src/test", "./src/**/*.test.ts"]
+}

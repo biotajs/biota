@@ -1,0 +1,5 @@
+.github
+lib
+node_modules
+tests
+*.js

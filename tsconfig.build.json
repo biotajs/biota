@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    // "strict": true,
+    "declaration": true,
+    "target": "esnext",
+    "sourceMap": true,
+    "lib": ["esnext", "dom"],
+    "module": "ESNext",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "preserveSymlinks": true,
+    "resolveJsonModule": true
+  },
+  "include": ["./src/**/*", "./src/**/*.json", "package.json"],
+  "exclude": ["node_modules", "./src/test", "./src/**/*.test.ts"]
+}

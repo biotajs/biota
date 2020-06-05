@@ -1,0 +1,52 @@
+{
+  "name": "@biota/builder",
+  "version": "0.0.1",
+  "description": "Biota's method builder (local/UDFs)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/biotajs/biota"
+  },
+  "author": {
+    "name": "Gabin Desserprit"
+  },
+  "bugs": {
+    "url": "https://github.com/biotajs/biota/issues"
+  },
+  "license": "MIT",
+  "main": "lib/index.js",
+  "umd:main": "lib/index.umd.js",
+  "module": "lib/index.m.js",
+  "source": "src/index.ts",
+  "types": "lib/src/index.d.ts",
+  "unpkg": "dist/foo.umd.js",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "dev": "microbundle watch --format cjs --no-compress --tsconfig tsconfig.build.json",
+    "start": "microbundle watch --no-compress --tsconfig tsconfig.build.json",
+    "build": "microbundle --tsconfig tsconfig.build.json",
+    "ship": "rm -rf ./node_modules/@biota && npm i && npm run build && git add . && git commit -m \"Refreshing dependencies\" && git push",
+    "test": "jest",
+    "prepublish": "yarn build"
+  },
+  "peerDependencies": {
+    "faunadb": "^2.14.2"
+  },
+  "sideEffects": false,
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js}": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "call": "biota.schema@0.0.1+ObjectValidate",
+  "arguments": [
+    null,
+    {
+      "object": {
+        "value": {
+          "object": {
+            "zip": 99400,
+            "city": "Enontekio",
+            "country": "Finland"
+          }
+        },
+        "options": {
+          "object": {
+            "properties": {
+              "object": {
+                "zip": "number",
+                "city": "string",
+                "country": {
+                  "object": {
+                    "type": "string",
+                    "enum": [
+                      "France",
+                      "Norway",
+                      "Finland",
+                      "Italy",
+                      "Germany"
+                    ]
+                  }
+                }
+              }
+            },
+            "description": "Try changing the schema!"
+          }
+        },
+        "state": {
+          "object": {}
+        }
+      }
+    }
+  ]
+}

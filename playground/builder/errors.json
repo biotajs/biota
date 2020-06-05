@@ -1,0 +1,70 @@
+{
+  "name": "BadRequest",
+  "message": "call error",
+  "requestResult": {
+    "method": "POST",
+    "path": "",
+    "query": null,
+    "requestRaw": "{\"call\":\"biota.builder@0.0.1+Annotate\",\"arguments\":[null,{\"object\":{\"action\":\"insert\",\"data\":null}}]}",
+    "requestContent": {
+      "call": "biota.builder@0.0.1+Annotate",
+      "arguments": [
+        null,
+        {
+          "object": {
+            "action": "insert",
+            "data": null
+          }
+        }
+      ]
+    },
+    "responseRaw": "{\"errors\":[{\"position\":[],\"code\":\"call error\",\"description\":\"Calling the function resulted in an error.\",\"cause\":[{\"position\":[\"expr\",\"in\",\"in\",\"in\",\"let\",\"response\",\"in\",\"then\",\"merge\"],\"code\":\"invalid argument\",\"description\":\"Object expected, Null provided.\"}]}]}",
+    "responseContent": {
+      "errors": [
+        {
+          "position": [],
+          "code": "call error",
+          "description": "Calling the function resulted in an error.",
+          "cause": [
+            {
+              "position": [
+                "expr",
+                "in",
+                "in",
+                "in",
+                "let",
+                "response",
+                "in",
+                "then",
+                "merge"
+              ],
+              "code": "invalid argument",
+              "description": "Object expected, Null provided."
+            }
+          ]
+        }
+      ]
+    },
+    "statusCode": 400,
+    "responseHeaders": {
+      "connection": "keep-alive",
+      "content-length": "265",
+      "content-type": "application/json;charset=utf-8",
+      "date": "Mon, 25 May 2020 08:23:16 GMT",
+      "traceparent": "00-00000000000000000000000000000000-0000000000000000-00",
+      "x-compute-ops": "0",
+      "x-faunadb-build": "20.05.00.rc1-3c5b0f3",
+      "x-query-bytes-in": "101",
+      "x-query-bytes-out": "265",
+      "x-query-time": "3",
+      "x-read-ops": "0",
+      "x-storage-bytes-read": "0",
+      "x-storage-bytes-write": "0",
+      "x-txn-retries": "0",
+      "x-txn-time": "1590394996607706",
+      "x-write-ops": "0"
+    },
+    "startTime": 1590394995891,
+    "endTime": 1590394996248
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "biota",
+  "private": true,
+  "version": "0.0.1",
+  "author": "Gabin Desserprit",
+  "license": "MIT",
+  "scripts": {
+    "test": "learn run test",
+    "prepatch": "lerna version prepatch"
+  },
+  "devDependencies": {
+    "lerna": "^3.22.0",
+    "husky": ">=1",
+    "lint-staged": ">=8",
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.6",
+    "@babel/plugin-transform-runtime": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-typescript": "^7.9.0",
+    "@types/jest": "^25.1.4",
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
+    "dotenv": "^8.2.0",
+    "eslint": "^6.8.0",
+    "faunadb": "file:./../../forks/faunadb-js",
+    "jest": "^26.0.0",
+    "microbundle": "^0.12.0-next.9",
+    "prettier": "^2.0.4",
+    "ts-jest": "^26.0.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "sideEffects": false
+}

@@ -1,0 +1,69 @@
+{
+  "name": "PermissionDenied",
+  "message": "permission denied",
+  "requestResult": {
+    "method": "POST",
+    "path": "",
+    "query": null,
+    "requestRaw": "{\"select\":\"response\",\"from\":{\"call\":\"biota.schema@0.0.1+StringValidate\",\"arguments\":[null,{\"object\":{\"value\":null,\"options\":{\"object\":{\"type\":\"string\",\"default\":\"super\"}},\"state\":{\"object\":{}}}}]},\"default\":{\"object\":{}}}",
+    "requestContent": {
+      "select": "response",
+      "from": {
+        "call": "biota.schema@0.0.1+StringValidate",
+        "arguments": [
+          null,
+          {
+            "object": {
+              "value": null,
+              "options": {
+                "object": {
+                  "type": "string",
+                  "default": "super"
+                }
+              },
+              "state": {
+                "object": {}
+              }
+            }
+          }
+        ]
+      },
+      "default": {
+        "object": {}
+      }
+    },
+    "responseRaw": "{\"errors\":[{\"position\":[\"from\"],\"code\":\"permission denied\",\"description\":\"Insufficient privileges to perform the action.\"}]}",
+    "responseContent": {
+      "errors": [
+        {
+          "position": [
+            "from"
+          ],
+          "code": "permission denied",
+          "description": "Insufficient privileges to perform the action."
+        }
+      ]
+    },
+    "statusCode": 403,
+    "responseHeaders": {
+      "connection": "keep-alive",
+      "content-length": "124",
+      "content-type": "application/json;charset=utf-8",
+      "date": "Mon, 01 Jun 2020 08:45:04 GMT",
+      "traceparent": "00-00000000000000000000000000000000-0000000000000000-00",
+      "x-compute-ops": "0",
+      "x-faunadb-build": "20.05.00.rc3-d9f0d4a",
+      "x-query-bytes-in": "221",
+      "x-query-bytes-out": "124",
+      "x-query-time": "208",
+      "x-read-ops": "0",
+      "x-storage-bytes-read": "0",
+      "x-storage-bytes-write": "0",
+      "x-txn-retries": "0",
+      "x-txn-time": "1591001104614320",
+      "x-write-ops": "0"
+    },
+    "startTime": 1591001101964,
+    "endTime": 1591001102624
+  }
+}
