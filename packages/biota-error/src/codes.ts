@@ -7,4 +7,12 @@ export const codes = {
     name: 'instance_not_found',
     message: 'No instance has been found.',
   },
+  instance_already_exists: {
+    name: 'instance_already_exists',
+    message: 'The instance already exists.',
+  },
+  data_validation_failed: {
+    name: 'data_validation_failed',
+    message: `Provided data doesn't match given schema.`,
+  },
 };

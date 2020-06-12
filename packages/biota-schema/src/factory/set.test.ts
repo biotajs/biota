@@ -23,9 +23,10 @@ describe('SetValidate', () => {
   const isItValid = isItValidAndNotSanitized(set);
 
   isItValid(`[set] is set`, q.Match(q.Index('all_letters')));
+  isItValid(`[null] is any`, values.null, {}, false, true);
 
   Object.entries(values)
-    .filter(([key]) => !key.startsWith('set'))
+    .filter(([key]) => !key.startsWith('set') && !['null'].includes(key))
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not set`, value, {}, false);
     });

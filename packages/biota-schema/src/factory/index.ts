@@ -15,6 +15,92 @@ const before = (_, options, __) => ({
   options: q.Merge(constructors.FormatDefinition.response(options), { type: 'index' }),
 });
 export const index: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
+  Schema: {
+    name: '',
+    extension: '.schema',
+    params: ['value', 'options'],
+    defaults: [null, {}],
+    query(_, options) {
+      return {
+        definition: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              notEnum: ['events', 'sets', 'self', 'documents', '__'],
+            },
+            source: {
+              anyOf: [
+                'reference',
+                {
+                  type: 'array',
+                  properties: {
+                    description: 'source_object',
+                    type: 'object',
+                    properties: {
+                      collection: 'collection',
+                      fields: 'object|allowAdditionals',
+                    },
+                  },
+                },
+              ],
+              default: null,
+              optional: true,
+            },
+            terms: {
+              type: 'array',
+              properties: {
+                description: 'term',
+                type: 'object',
+                properties: {
+                  field: {
+                    type: 'array',
+                    properties: 'string',
+                  },
+                  binding: 'string', // validate if exists!
+                },
+              },
+            },
+            values: {
+              optional: true,
+              type: 'array',
+              properties: {
+                description: 'term',
+                type: 'object',
+                properties: {
+                  field: {
+                    type: 'array',
+                    properties: 'string',
+                  },
+                  binding: 'string', // validate if exists!
+                  reverse: {
+                    type: 'boolean',
+                    default: false,
+                  },
+                },
+              },
+            },
+            unique: 'boolean|optional',
+            serialized: 'boolean|optional',
+            data: {
+              optional: true,
+              type: 'object',
+              allowAdditionals: true,
+              default: {},
+            },
+            permissions: {
+              optional: true,
+              type: 'object',
+              default: null,
+            },
+          },
+          allowAdditionals: q.Select('allowAdditionals', options, false),
+          optionals: q.Select('optionals', options, false),
+        },
+      };
+    },
+  },
+
   Validate: {
     name: 'Validate',
     before,

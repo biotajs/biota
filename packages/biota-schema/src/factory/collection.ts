@@ -15,6 +15,48 @@ const before = (_, options, __) => ({
   options: q.Merge(constructors.FormatDefinition.response(options), { type: 'collection' }),
 });
 export const collection: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
+  Schema: {
+    name: '',
+    extension: '.schema',
+    params: ['value', 'options'],
+    defaults: [null, {}],
+    query(_, options) {
+      return {
+        definition: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              notEnum: ['events', 'sets', 'self', 'documents', '__'],
+            },
+            data: {
+              type: 'object',
+              allowAdditionals: true,
+              default: {},
+              optional: true,
+            },
+            history_days: {
+              anyOf: ['number|integer|positive', 'null'],
+              default: null,
+              optional: true,
+            },
+            ttl_days: {
+              anyOf: ['number|integer|positive', 'null'],
+              default: null,
+              optional: true,
+            },
+            permissions: {
+              type: 'object',
+              default: null,
+              optional: true,
+            },
+          },
+          allowAdditionals: q.Select('allowAdditionals', options, false),
+          optionals: q.Select('optionals', options, false),
+        },
+      };
+    },
+  },
   Validate: {
     name: 'Validate',
     before,
@@ -38,6 +80,7 @@ export const collection: types.BiotaBuilderMethodOutputAPIKeyed = build.methods(
       return q.Let(
         {
           isCollection: q.IsCollection(value),
+          //ab: q.Abort(q.Format('%@', { value, isCollection: q.Var('isCollection') })),
         },
         {
           value: value,

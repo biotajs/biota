@@ -49,24 +49,28 @@ export const error: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           errorCodes: error.Codes.response(),
         },
         q.If(
-          q.Contains(code, q.Var('errorCodes')),
-          q.Let(
-            {
-              message: helpers.FillTemplate.response(
-                q.Select(
-                  [code, 'messages', q.Var('language')],
-                  q.Var('errorCodes'),
-                  q.Select([code, 'message'], q.Var('errorCodes'), ''),
+          q.IsString(code),
+          q.If(
+            q.Contains(code, q.Var('errorCodes')),
+            q.Let(
+              {
+                message: helpers.FillTemplate.response(
+                  q.Select(
+                    [code, 'messages', q.Var('language')],
+                    q.Var('errorCodes'),
+                    q.Select([code, 'message'], q.Var('errorCodes'), ''),
+                  ),
+                  q.Merge(keyValues, { code }),
                 ),
-                q.Merge(keyValues, { code }),
-              ),
-            },
-            {
-              code,
-              message: q.Var('message'),
-            },
+              },
+              {
+                code,
+                message: q.Var('message'),
+              },
+            ),
+            q.Select('unknown', q.Var('errorCodes'), {}),
           ),
-          q.Select('unknown', q.Var('errorCodes'), {}),
+          error.Throw.response(codes.data_validation_failed.name, { code }, 'The code should be a string.'),
         ),
       );
     },

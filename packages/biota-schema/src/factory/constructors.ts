@@ -30,18 +30,11 @@ export const constructors: types.BiotaBuilderMethodOutputAPIKeyed = build.method
                   {
                     splitted: helpers.StringSplit.response(q.Trim(q.Var('definition')), '|'),
                     firstItem: q.Select(0, q.Var('splitted'), ''),
-                    Types: q.Map(
-                      q.ToArray(constants.constants.Types.response()),
-                      q.Lambda(['key', 'v'], q.Var('key')),
-                    ),
+                    Types: q.Map(q.ToArray(constants.constants.Types.response()), q.Lambda(['key', 'v'], q.Var('key'))),
                     firstItemIsType: helpers.ArrayContains.response(q.Var('Types'), q.Var('firstItem')),
                     type: q.If(q.Var('firstItemIsType'), q.Var('firstItem'), null),
                     keyValues: q.Map(
-                      q.If(
-                        q.IsNull(q.Var('type')),
-                        q.Var('splitted'),
-                        helpers.Slice.response(q.Var('splitted'), 1),
-                      ),
+                      q.If(q.IsNull(q.Var('type')), q.Var('splitted'), helpers.Slice.response(q.Var('splitted'), 1)),
                       q.Lambda(
                         'item',
                         // q.Abort(q.Format('%@', { item: StringSplit(q.Var('item'), ':') })),
@@ -152,11 +145,12 @@ export const constructors: types.BiotaBuilderMethodOutputAPIKeyed = build.method
   },
   ArrayComposeResolver: {
     name: 'ArrayComposeResolver',
-    params: ['keyValues', 'itemsOptions', 'state', 'UDFsNameMapping', 'firstTests', 'filteredProperties'],
+    params: ['keyValues', 'itemsOptions', 'state', 'filteredProperties'],
     defaults: [null, {}, {}, {}, [], []],
-    query(keyValues, itemsOptions, state, UDFsNameMapping, firstTests, filteredProperties) {
+    query(keyValues, itemsOptions, state, filteredProperties) {
       return q.Reduce(
         q.Lambda(['reduced', 'step'], {
+          // ab: q.Abort(q.Format('%@', { step: q.Var('step'), reduced: q.Var('reduced') })),
           value: q.Let(
             {
               key: q.Select(['state', 'key'], q.Var('step'), null),
@@ -184,41 +178,49 @@ export const constructors: types.BiotaBuilderMethodOutputAPIKeyed = build.method
           sanitized: false,
           errors: [],
         },
-        q.Map(
-          helpers.ArrayIndexed.response(keyValues),
-          q.Lambda(
-            ['index', 'keyItem'],
-            q.Let(
-              {
-                key: q.Select(0, q.Var('keyItem'), null),
-                item: q.Select(1, q.Var('keyItem'), null),
-              },
-              constructors.ComposeResolver.response(
-                q.Var('item'),
+        q.Let(
+          {
+            mappings: q.Map(
+              helpers.ArrayIndexed.response(keyValues),
+              q.Lambda(
+                ['index', 'keyItem'],
                 q.Let(
-                  { state, itemsOptions },
-                  constructors.FormatDefinition.response(
-                    q.If(
-                      q.Not(q.Select('object', q.Var('state'), false)),
-                      q.If(
-                        q.IsArray(q.Var('itemsOptions')),
-                        q.Select(q.Var('index'), q.Var('itemsOptions'), {}),
-                        q.Var('itemsOptions'),
+                  {
+                    key: q.Select(0, q.Var('keyItem'), null),
+                    item: q.Select(1, q.Var('keyItem'), null),
+                  },
+                  constructors.SimpleResolver.response(
+                    q.Var('item'),
+                    q.Let(
+                      { state, itemsOptions },
+                      constructors.FormatDefinition.response(
+                        q.If(
+                          q.Not(q.Select('object', q.Var('state'), false)),
+                          q.If(
+                            q.IsArray(q.Var('itemsOptions')),
+                            q.Select(q.Var('index'), q.Var('itemsOptions'), {}),
+                            q.Var('itemsOptions'),
+                          ),
+                          q.Select(q.Var('key'), q.Var('itemsOptions'), {}),
+                        ),
                       ),
-                      q.Select(q.Var('key'), q.Var('itemsOptions'), {}),
                     ),
+                    q.Merge(state, {
+                      key: q.Var('key'),
+                      field: q.If(
+                        q.IsString(q.Select('field', q.Var('state'), null)),
+                        q.Concat([q.Select('field', q.Var('state')), q.ToString(q.Var('key'))], '.'),
+                        q.ToString(q.Var('key')),
+                      ),
+                    }),
+                    `biota.schema@${packagejson.version}+Validate`,
                   ),
                 ),
-                q.Merge(state, {
-                  key: q.Var('key'),
-                  field: q.Concat([q.Select('field', q.Var('state'), 'Value'), q.ToString(q.Var('key'))], '.'),
-                }),
-                UDFsNameMapping,
-                firstTests,
-                filteredProperties,
               ),
             ),
-          ),
+            // ab: q.Abort(q.Format('%@', { mappings: q.Var('mappings') })),
+          },
+          q.Var('mappings'),
         ),
       );
     },
@@ -238,7 +240,7 @@ export const constructors: types.BiotaBuilderMethodOutputAPIKeyed = build.method
               'test',
               q.Equals(
                 helpers.ArrayContains.response(
-                  q.Distinct(q.Append(filteredProperties, ['description'])),
+                  q.Distinct(q.Append(filteredProperties, ['description', 'optional'])),
                   q.Var('test'),
                 ),
                 false,
@@ -331,6 +333,46 @@ export const constructors: types.BiotaBuilderMethodOutputAPIKeyed = build.method
           },
           q.Var('tests'),
         ),
+      );
+    },
+  },
+  SimpleResolver: {
+    name: 'SimpleResolver',
+    params: ['value', 'options', 'state', 'UDFName'],
+    defaults: [null, {}, {}, {}, [], []],
+    query(value, options, state, UDFName) {
+      return q.If(
+        q.Equals(q.Not(q.Select(['stop'], value, false)), true),
+        q.Let(
+          {
+            // ab: q.Abort(q.Format('%@', { value, options, state })),
+            hasValidName: q.IsString(UDFName),
+            UDFExists: q.If(q.Var('hasValidName'), q.Exists(q.Function(UDFName)), false),
+          },
+          q.If(
+            q.Var('UDFExists'),
+            q.Select(
+              'response',
+              q.Call(UDFName, q.Var('ctx'), {
+                value,
+                options,
+                state,
+              }),
+              {},
+            ),
+            {
+              valid: false,
+              errors: constructors.FormatErrors.response(state, [
+                {
+                  wrong: true,
+                  type: 'udfunction_missing_for_test',
+                  expected: UDFName,
+                },
+              ]),
+            },
+          ),
+        ),
+        value,
       );
     },
   },

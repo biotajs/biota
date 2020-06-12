@@ -26,6 +26,7 @@ export const messages = {
     string_pattern: '{identifier} ne correspond pas au modèle (regex).',
     string_contains: "{identifier} doit contenir le segment '{expected}'.",
     string_enum: '{identifier} ne correspond à aucune des valeurs autorisées.',
+    string_not_enum: '{identifier} est une valeur interdite.',
     string_numeric: '{identifier} doit être un texte contenant un nombre.',
     string_alpha: `{identifier} doit être un texte contenant uniquement l'alphabet.`,
     string_alphanum: `{identifier} doit être un texte contenant uniquement l'alphabets et/ou des chiffres'.`,
@@ -83,6 +84,7 @@ export const messages = {
 
     reference: '{identifier} doit être une référence.',
     reference_exists: '{identifier} doit exister.',
+    reference_not_exists: '{identifier} ne doit pas exister.',
 
     udfunction_missing_for_test: `Une 'User-Defined Function' est manquante pour la propriété: '{expected}'.`,
   },
@@ -107,7 +109,8 @@ export const messages = {
     string_length: '{identifier} must be {expected} characters long.',
     string_pattern: '{identifier} fails to match the required pattern.',
     string_contains: "{identifier} must contain the '{expected}' text.",
-    string_enum: '{identifier} does not match any of the allowed values.',
+    string_enum: '{identifier} does match any of the allowed values.',
+    string_not_enum: '{identifier} is a forbidden value.',
     string_numeric: '{identifier} must be a numeric string.',
     string_alpha: '{identifier} must be an alphabetic string.',
     string_alphanum: '{identifier} must be an alphanumeric string.',
@@ -165,6 +168,7 @@ export const messages = {
 
     reference: '{identifier} must be a reference.',
     reference_exists: '{identifier} must exists.',
+    reference_not_exists: '{identifier} must not exists.',
 
     udfunction_missing_for_test: `A User-Defined Function is missing for the definition property '{expected}'.`,
   },

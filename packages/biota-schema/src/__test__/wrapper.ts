@@ -1,3 +1,4 @@
+
 import { client } from './client';
 
 export const isItValidAndNotSanitized = (type: any, state: any = {}) => {
@@ -11,16 +12,16 @@ export const isItValidAndNotSanitized = (type: any, state: any = {}) => {
         //   console.log('type', type);
         //   console.error(e);
         // }
-
         return (state.hasOwnProperty('db') ? state.db : client())
-          .query((type as any).Validate.response(value, properties, {}))
+          .query((type as any).Validate.callResponse(value, properties, {}))
           .then((response: any) => {
             expect(response.valid).toBe(valid);
             expect(response.sanitized).toBe(sanitized);
-          });
-        // .catch((e) => {
-        //   console.log("error", type);
-        // });
+          })
+          // .catch((e) => {
+          //   console.log('error', e);
+          //   throw e
+          // });
       },
       10000,
     );

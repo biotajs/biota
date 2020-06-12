@@ -7,9 +7,10 @@ describe('BooleanValidat', () => {
 
   isItValid(`[boolean_true] is boolean`, values.boolean_true);
   isItValid(`[boolean_false] is boolean`, values.boolean_false);
+  isItValid(`[null] is any`, values.null, {}, false, true);
 
   Object.entries(values)
-    .filter(([key]) => !key.startsWith('boolean'))
+    .filter(([key]) => !key.startsWith('boolean') && !['null'].includes(key))
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not boolean`, value, {}, false);
     });

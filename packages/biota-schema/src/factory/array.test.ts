@@ -73,8 +73,10 @@ describe('ArrayValidate', () => {
     true,
   );
 
+  isItValid(`[null] is any`, values.null, {}, false, true);
+
   Object.entries(values)
-    .filter(([key]) => !key.startsWith('array') && !['bytes_uint8array'].includes(key))
+    .filter(([key]) => !key.startsWith('array') && !['bytes_uint8array'].includes(key) && !['null'].includes(key))
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not array`, value, {}, false);
     });

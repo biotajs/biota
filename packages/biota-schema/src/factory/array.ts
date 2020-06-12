@@ -332,27 +332,25 @@ export const array: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
         {
           hasItems: q.Contains('items', options),
           items: constructors.FormatDefinition.response(q.Select('items', options, null)),
-          isValidItems: q.Or(q.IsObject(q.Var('items')), q.IsArray(q.Var('items'))),
-          wrappedItems: q.If(
-            q.IsObject(q.Var('items')),
-            { validate: q.Var('items') },
-            q.If(q.IsArray(q.Var('items')), q.Map(q.Var('items'), q.Lambda('item', { validate: q.Var('item') })), null),
-          ),
-          // ab: q.Abort(q.Format('%@', { wrappedItems: q.Var('wrappedItems') })),
+          //isValidItems: q.Or(q.IsObject(q.Var('items')), q.IsArray(q.Var('items'))),
+          // wrappedItems: q.If(
+          //   q.IsObject(q.Var('items')),
+          //   { validate: q.Var('items') },
+          //   q.If(q.IsArray(q.Var('items')), q.Map(q.Var('items'), q.Lambda('item', { validate: q.Var('item') })), null),
+          // ),
+          //ab: q.Abort(q.Format('%@', { items: q.Var('items') })),
           // ↓
           result: q.If(
-            q.And(q.Var('hasItems'), q.Var('isValidItems')),
+            // q.And(q.Var('hasItems'), q.Var('isValidItems')),
+            q.Var('hasItems'),
             constructors.ArrayComposeResolver.response(
               helpers.ArrayIndexed.response(value),
-              q.Var('wrappedItems'),
+              q.Var('items'),
               state,
-              {
-                validate: `biota.schema@${packagejson.version}+Validate`,
-              },
-              ['validate'],
             ),
             { valid: true },
           ),
+          //ab: q.Abort(q.Format('%@', { result: q.Var('result') })),
           valid: q.Select('valid', q.Var('result'), false),
           errors: q.Select('errors', q.Var('result'), []),
         },

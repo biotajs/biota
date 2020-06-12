@@ -22,9 +22,10 @@ describe('DatabaseValidate', () => {
   const isItValid = isItValidAndNotSanitized(database);
 
   isItValid(`[database] is database`, values.database);
+  isItValid(`[null] is any`, values.null, {}, false, true);
 
   Object.entries(values)
-    .filter(([key]) => !key.startsWith('database'))
+    .filter(([key]) => !key.startsWith('database') && !['null'].includes(key))
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not database`, value, {}, false);
     });

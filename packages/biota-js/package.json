@@ -18,14 +18,16 @@
   "module": "lib/index.m.js",
   "source": "src/index.ts",
   "types": "lib/src/index.d.ts",
-  "unpkg": "dist/foo.umd.js",
+  "unpkg": "lib/index.umd.js",
   "files": [
     "lib"
   ],
   "scripts": {
-    "dev": "microbundle watch --format cjs --no-compress --tsconfig tsconfig.build.json",
-    "start": "microbundle watch --tsconfig tsconfig.build.json",
+    "clean": "rimraf lib",
+    "dev": "microbundle --format cjs --no-compress --tsconfig tsconfig.build.json",
+    "dev:watch": "microbundle watch --format cjs --no-compress --tsconfig tsconfig.build.json",
     "build": "microbundle --tsconfig tsconfig.build.json",
+    "build:watch": "microbundle watch --no-compress --tsconfig tsconfig.build.json",
     "biota": "rm -rf node_modules/@biota && npm i",
     "ship": "rm -rf ./node_modules/@biota && npm i && npm run build && git add . && git commit -m \"Refreshing dependencies\" && git push",
     "test": "jest"

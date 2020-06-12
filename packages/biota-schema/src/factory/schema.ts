@@ -1,6 +1,10 @@
 import { Builder, types } from '@biota/builder';
+import { factory as helpers } from '@biota/helpers';
 import { ExprArg, query as q } from 'faunadb';
 import packagejson from './../../package.json';
+
+import { constructors } from './constructors';
+import { function_ } from './function';
 
 const build = new Builder({
   lib: 'biota.schema',
@@ -9,56 +13,84 @@ const build = new Builder({
 });
 
 export const schemaName = (name: string) => name + '.schema';
-export const schemaNameFQL = (name: ExprArg) => q.Concat([name, '.schema'], '');
+export const schemaNameFQL = (name: ExprArg, version: ExprArg) =>
+  q.Concat([name, '.schema', q.If(q.IsString(version), q.Concat(['@', version], ''), '')], '');
 
+const before = (_, options, __) => ({
+  options: constructors.FormatDefinition.response(options),
+});
 export const schema: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
-  Upsert: {
-    name: 'Upsert',
-    params: ['name', 'definition', 'version'],
-    defaults: [null, {}, null],
-    query(name, definition, version) {
+  Validate: {
+    name: 'Validate',
+    before,
+    params: ['value', 'options', 'state'],
+    defaults: [null, {}, {}],
+    query(value, options, state) {
       return q.Let(
         {
-          ref: q.Function(schemaNameFQL(name)),
-          updatedDefinition: q.Merge(definition, { $id: schemaNameFQL(name) }),
+          schema: q.Select('schema', options, null),
+          schemaOptions: q.Select('options', options, {}),
+          hasSchema: q.If(
+            q.IsString(q.Var('schema')),
+            q.Select('valid', function_.Validate.response(q.Function(q.Var('schema'))), false),
+            false,
+          ),
+          schemaDefinition: q.If(
+            q.Var('hasSchema'),
+            q.Select(
+              ['response', 'definition'],
+              q.Call(q.Var('schema'), q.Var('ctx'), {
+                options: q.Var('schemaOptions'),
+              }),
+              {},
+            ),
+            {},
+          ),
+          // ab: q.Abort(q.Format('%@', { hasSchema: q.Var('hasSchema'), options: q.Var('options') })),
+          // ab: q.Abort(q.Format('%@', { hasSchema: q.Var('hasSchema'), schemaOptions: q.Var('schemaOptions'), schemaDefinition: q.Var('schemaDefinition') })),
+        },
+        q.If(
+          q.Var('hasSchema'),
+          q.Select(
+            'response',
+            q.Call(`biota.schema@${packagejson.version}+Validate`, q.Var('ctx'), {
+              value,
+              options: q.Var('schemaDefinition'),
+              state,
+            }),
+            {},
+          ),
+          '',
+        ),
+      );
+    },
+  },
+  // Remove the above and replace with the @biota/core!
+  Upsert: {
+    name: 'Upsert',
+    params: ['name', 'body', 'version'],
+    defaults: [null, {}, null],
+    query(name, body, version) {
+      return q.Let(
+        {
+          ref: q.Function(schemaNameFQL(name, version)),
         },
         q.If(
           q.Exists(q.Var('ref')),
-          q.Let(
-            {
-              fn: q.Get(q.Var('ref')),
-              currentVersion: q.Select('version', q.Var('fn'), null),
-              version: q.If(q.IsString(version), version, q.Var('currentVersion')),
-            },
-            q.Replace(q.Var('ref'), {
-              body: q.Query(
-                q.Lambda('x', {
-                  definition,
-                  version: q.Var('version'),
-                }),
-              ),
-            }),
-          ),
-          q.CreateFunction({
-            name: schemaNameFQL(name),
-            body: q.Query(
-              q.Lambda('x', {
-                definition,
-                version: q.Var('version'),
-              }),
-            ),
-          }),
+          q.Replace(q.Var('ref'), { body }),
+          q.CreateFunction({ name: schemaNameFQL(name, version), body }),
         ),
       );
     },
   },
   Delete: {
     name: 'Delete',
-    params: ['name'],
-    query(name) {
+    params: ['name', 'version'],
+    defaults: [null, null],
+    query(name, version) {
       return q.Let(
         {
-          ref: q.Function(schemaNameFQL(name)),
+          ref: q.Function(schemaNameFQL(name, version)),
         },
         q.If(q.Exists(q.Var('ref')), q.Delete(q.Var('ref')), null),
       );

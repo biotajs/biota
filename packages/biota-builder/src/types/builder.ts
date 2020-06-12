@@ -6,10 +6,11 @@ export interface BiotaBuilderOptionsActionOptions {
 
 export interface BiotaBuilderOptions {
   lib?: string;
+  extension?: string;
   version?: string;
   path?: string;
-  annotate?: boolean;
-  action?: boolean;
+  annotate?: string;
+  action?: string;
   actionOptions?: BiotaBuilderOptionsActionOptions;
   identity?(ctx: ExprVal): ExprVal;
   context?: any;
@@ -28,9 +29,13 @@ export interface BiotaBuilderDefinition<I = ExprVal, O = ExprVal> {
   role?: string;
   context?(ctx: ExprVal): O;
 
+  lib?: string;
+  extension?: string;
+  version?: string;
+  path?: string;
+  annotate?: string;
+  action?: string;
   alias?: boolean;
-  annotate?: boolean;
-  action?: boolean;
 }
 
 export interface BiotaBuilderMethodOutputAPI {
@@ -66,5 +71,5 @@ export interface BiotaBuilderMethodResult {
 }
 
 export interface BiotaBuilderActionApi {
-  log: BiotaBuilderMethodOutputAPI;
+  Log: BiotaBuilderMethodOutputAPI;
 }

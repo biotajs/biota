@@ -3,7 +3,7 @@ import { annotate } from './annotate';
 
 const testAnnotation = (action: string, pathBy: string, pathAt: string) => {
   test(action, async (done) => {
-    let { response } = await client().query(annotate.query(action, {}));
+    let { response } = await client().query(annotate.Annotate.callResponse(action, {}));
     expect(response).toHaveProperty(['_activity', pathBy]);
     expect(response).toHaveProperty(['_activity', pathAt]);
     done();

@@ -36,6 +36,7 @@ export const string: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           pattern: string.Pattern.udfName(),
           contains: string.Contains.udfName(),
           enum: string.Enum.udfName(),
+          notEnum: string.NotEnum.udfName(),
           numeric: string.Numeric.udfName(),
           alpha: string.Alpha.udfName(),
           alphanum: string.Alphanum.udfName(),
@@ -49,8 +50,8 @@ export const string: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           trimEnd: string.TrimEnd.udfName(),
           padStart: string.PadStart.udfName(),
           padEnd: string.PadEnd.udfName(),
-          lowercase: string.Lowercase.udfName(),
-          uppercase: string.Uppercase.udfName(),
+          lowercase: string.LowerCase.udfName(),
+          uppercase: string.UpperCase.udfName(),
           capitalize: string.Capitalize.udfName(),
         },
         ['convert', 'default', 'type'],
@@ -266,8 +267,8 @@ export const string: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       );
     },
   },
-  Lowercase: {
-    name: 'Lowercase',
+  LowerCase: {
+    name: 'LowerCase',
     before,
     query(value, options, state) {
       return q.Let(
@@ -496,11 +497,8 @@ export const string: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
             q.All(q.Map(q.Var('enum'), q.Lambda('item', q.IsString(q.Var('item'))))),
             false,
           ),
-
-          //  ab: q.Abort(q.Format('%@', { hasEnum: q.Var('hasEnum'), enum: q.Var('enum') })),
           // ↓
-          valid: true,
-          // valid: q.If(q.Var('hasEnum'), helpers.ArrayContains.response(q.Var('enum'), value), true),
+          valid: q.If(q.Var('hasEnum'), helpers.ArrayContains.response(q.Var('enum'), value), true),
         },
         {
           value: value,
@@ -511,6 +509,37 @@ export const string: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
               wrong: q.Not(q.Var('valid')),
               type: 'string_enum',
               expected: q.Var('enum'),
+              actual: value,
+            },
+          ]),
+        },
+      );
+    },
+  },
+  NotEnum: {
+    name: 'NotEnum',
+    before,
+    query(value, options, state) {
+      return q.Let(
+        {
+          notEnum: q.Select('notEnum', options, null),
+          hasEnum: q.If(
+            q.IsArray(q.Var('notEnum')),
+            q.All(q.Map(q.Var('notEnum'), q.Lambda('item', q.IsString(q.Var('item'))))),
+            false,
+          ),
+          // ↓
+          valid: q.If(q.Var('hasEnum'), q.Not(helpers.ArrayContains.response(q.Var('notEnum'), value)), true),
+        },
+        {
+          value: value,
+          valid: q.Var('valid'),
+          sanitized: false,
+          errors: constructors.FormatErrors.response(state, [
+            {
+              wrong: q.Not(q.Var('valid')),
+              type: 'string_not_enum',
+              expected: q.Var('notEnum'),
               actual: value,
             },
           ]),

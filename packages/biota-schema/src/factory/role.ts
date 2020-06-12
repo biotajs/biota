@@ -15,6 +15,62 @@ const before = (_, options, __) => ({
   options: q.Merge(constructors.FormatDefinition.response(options), { type: 'role' }),
 });
 export const role: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
+  Schema: {
+    name: '',
+    extension: '.schema',
+    params: ['value', 'options'],
+    defaults: [null, {}],
+    query(_, options) {
+      return {
+        definition: {
+          type: 'object',
+          properties: {
+            name: 'string',
+            privileges: {
+              type: 'array',
+              properties: {
+                type: 'object',
+                properties: {
+                  resource: 'reference',
+                  actions: {
+                    type: 'object',
+                    properties: {
+                      create: 'any|optional',
+                      delete: 'any|optional',
+                      read: 'any|optional',
+                      write: 'any|optional',
+                      history_read: 'any|optional',
+                      history_write: 'any|optional',
+                      unrestricted_read: 'any|optional',
+                      call: 'any|optional',
+                    },
+                  },
+                },
+              },
+            },
+            membership: {
+              type: 'array',
+              properties: {
+                type: 'object',
+                properties: {
+                  resource: 'reference',
+                  predicate: 'any',
+                },
+              },
+            },
+            data: {
+              optional: true,
+              type: 'object',
+              allowAdditionals: true,
+              default: {},
+            },
+          },
+          allowAdditionals: q.Select('allowAdditionals', options, false),
+          optionals: q.Select('optionals', options, false),
+        },
+      };
+    },
+  },
   Validate: {
     name: 'Validate',
     before,

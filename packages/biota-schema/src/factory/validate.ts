@@ -26,6 +26,7 @@ import { set as setFactory } from './set';
 import { string as stringFactory } from './string';
 import { time as timeFactory } from './time';
 import { token as tokenFactory } from './token';
+import { schema as schemaFactory } from './schema';
 
 const build = new Builder({
   lib: 'biota.schema',
@@ -38,10 +39,12 @@ export const validate: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
     query(value, options, state) {
       return q.Let(
         {
-          hasValidate: q.Contains('validate', options),
+          // hasValidate: q.Contains('validate', options),
           // stopIfNoValidateProp: q.Abort(hasValidate),
-          definition: constructors.FormatDefinition.response(q.Select('validate', options, null)),
+          // definition: constructors.FormatDefinition.response(q.Select('validate', options, null)),
+          definition: constructors.FormatDefinition.response(options),
           hasValidDefinition: q.Not(q.IsNull(q.Var('definition'))),
+          hasSchema: q.Contains('schema', q.Var('definition')),
           hasAnyOf: q.IsArray(q.Select('anyOf', q.Var('definition'), null)),
           anyOf: q.If(
             q.Var('hasAnyOf'),
@@ -82,7 +85,18 @@ export const validate: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
             q.IsEmpty(q.Var('definitions')),
             q.If(
               q.Var('hasValidDefinition'),
-              validate.ValidateSingle.response(value, q.Var('definition'), state),
+              q.If(
+                q.Var('hasSchema'),
+                validate.ValidateSingle.response(
+                  value,
+                  q.Merge(q.Var('definition'), {
+                    type: 'schema',
+                    schema: q.Select('schema', q.Var('definition'), {}),
+                  }),
+                  state,
+                ),
+                validate.ValidateSingle.response(value, q.Var('definition'), state),
+              ),
               '//error',
             ),
             q.Let(
@@ -113,6 +127,8 @@ export const validate: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
   },
   ValidateThrow: {
     name: 'ValidateThrow',
+    params: ['code', 'value', 'options', 'state'],
+    defaults: [null, null, {}, {}],
     query(code, value, options, state) {
       return q.Let(
         {
@@ -120,7 +136,7 @@ export const validate: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           valid: q.If(
             q.Select('valid', q.Var('validation'), false),
             true,
-            error.error.Throw.response(code, { value, options }),
+            error.error.Throw.response(code, { value, options, validation: q.Var('validation') }),
           ),
         },
         true,
@@ -137,49 +153,177 @@ export const validate: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           type: q.Select('type', q.Var('definition'), null),
           // ↓
           newState: q.Merge(state, {
-            field: q.If(q.IsNull(q.Select('field', state, null)), 'Value', q.Select('field', state)),
+            field: q.Select('field', state, null),
+            // field: q.If(q.IsNull(q.Select('field', state, null)), 'Value', q.Select('field', state)),
           }),
+          default: {
+            value,
+            valid: false,
+            sanitized: false,
+            errors: [],
+          },
           result: q.If(
             q.IsString(q.Var('type')),
-            helpers.Switch.response(
-              q.Var('type'),
-              {
-                any: anyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                array: arrayFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                boolean: booleanFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                bytes: bytesFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                collection: collectionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                credentials: credentialsFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                database: databaseFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                date: dateFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                document: documentFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                function: functionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                index: indexFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                key: keyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                lambda: lambdaFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                null: nullFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                number: numberFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                object: objectFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                reference: referenceFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                role: roleFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                set: setFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                string: stringFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                time: timeFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-                token: tokenFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
-              },
-              {
-                value,
-                valid: false,
-                sanitized: false,
-                errors: [],
-              },
+            q.If(
+              q.Equals(q.Var('type'), 'schema'),
+              schemaFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+              q.If(
+                q.Equals(q.Var('type'), 'any'),
+                anyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                q.If(
+                  q.Equals(q.Var('type'), 'array'),
+                  arrayFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                  q.If(
+                    q.Equals(q.Var('type'), 'boolean'),
+                    booleanFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                    q.If(
+                      q.Equals(q.Var('type'), 'bytes'),
+                      bytesFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                      q.If(
+                        q.Equals(q.Var('type'), 'collection'),
+                        collectionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                        q.If(
+                          q.Equals(q.Var('type'), 'credentials'),
+                          credentialsFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                          q.If(
+                            q.Equals(q.Var('type'), 'database'),
+                            databaseFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                            q.If(
+                              q.Equals(q.Var('type'), 'date'),
+                              dateFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                              q.If(
+                                q.Equals(q.Var('type'), 'document'),
+                                documentFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                q.If(
+                                  q.Equals(q.Var('type'), 'function'),
+                                  functionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                  q.If(
+                                    q.Equals(q.Var('type'), 'index'),
+                                    indexFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                    q.If(
+                                      q.Equals(q.Var('type'), 'key'),
+                                      keyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                      q.If(
+                                        q.Equals(q.Var('type'), 'lambda'),
+                                        lambdaFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                        q.If(
+                                          q.Equals(q.Var('type'), 'null'),
+                                          nullFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+                                          q.If(
+                                            q.Equals(q.Var('type'), 'number'),
+                                            numberFactory.Validate.response(
+                                              value,
+                                              q.Var('definition'),
+                                              q.Var('newState'),
+                                            ),
+                                            q.If(
+                                              q.Equals(q.Var('type'), 'object'),
+                                              objectFactory.Validate.response(
+                                                value,
+                                                q.Var('definition'),
+                                                q.Var('newState'),
+                                              ),
+                                              q.If(
+                                                q.Equals(q.Var('type'), 'reference'),
+                                                referenceFactory.Validate.response(
+                                                  value,
+                                                  q.Var('definition'),
+                                                  q.Var('newState'),
+                                                ),
+                                                q.If(
+                                                  q.Equals(q.Var('type'), 'role'),
+                                                  roleFactory.Validate.response(
+                                                    value,
+                                                    q.Var('definition'),
+                                                    q.Var('newState'),
+                                                  ),
+                                                  q.If(
+                                                    q.Equals(q.Var('type'), 'set'),
+                                                    setFactory.Validate.response(
+                                                      value,
+                                                      q.Var('definition'),
+                                                      q.Var('newState'),
+                                                    ),
+                                                    q.If(
+                                                      q.Equals(q.Var('type'), 'string'),
+                                                      stringFactory.Validate.response(
+                                                        value,
+                                                        q.Var('definition'),
+                                                        q.Var('newState'),
+                                                      ),
+                                                      q.If(
+                                                        q.Equals(q.Var('type'), 'time'),
+                                                        timeFactory.Validate.response(
+                                                          value,
+                                                          q.Var('definition'),
+                                                          q.Var('newState'),
+                                                        ),
+                                                        q.If(
+                                                          q.Equals(q.Var('type'), 'token'),
+                                                          tokenFactory.Validate.response(
+                                                            value,
+                                                            q.Var('definition'),
+                                                            q.Var('newState'),
+                                                          ),
+                                                          q.Var('default'),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-            {
-              value,
-              valid: false,
-              sanitized: false,
-              errors: [],
-            },
+            // helpers.Switch.response(
+            //   q.Var('type'),
+            //   {
+            //     schema: schemaFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     any: anyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     array: arrayFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     boolean: booleanFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     bytes: bytesFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     collection: collectionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     credentials: credentialsFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     database: databaseFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     date: dateFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     document: documentFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     function: functionFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     index: indexFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     key: keyFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     lambda: lambdaFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     null: nullFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     number: numberFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     object: objectFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     reference: referenceFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     role: roleFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     set: setFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     string: stringFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     time: timeFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //     token: tokenFactory.Validate.response(value, q.Var('definition'), q.Var('newState')),
+            //   },
+            //   {
+            //     value,
+            //     valid: false,
+            //     sanitized: false,
+            //     errors: [],
+            //   },
+            // ),
+            q.Var('default'),
           ),
         },
         q.Var('result'),

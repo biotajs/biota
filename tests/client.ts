@@ -6,8 +6,8 @@ export function client(secret?: string) {
   return new fauna.Client({ secret: secret || process.env.FAUNA_TEST_KEY });
 }
 
-export async function database() {
-  const c = client();
+export async function database(clientSecret?: string) {
+  const c = client(clientSecret);
 
   const { id, key } = await c.query(
     q.Let(
@@ -31,6 +31,7 @@ export async function database() {
   const { secret } = key || {};
 
   return {
+    secret,
     db: client(secret),
     drop() {
       return c.query(q.Delete(q.Database(id)));

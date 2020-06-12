@@ -15,6 +15,48 @@ const before = (_, options, __) => ({
   options: q.Merge(constructors.FormatDefinition.response(options), { type: 'database' }),
 });
 export const database: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
+  Schema: {
+    name: '',
+    extension: '.schema',
+    params: ['value', 'options'],
+    defaults: [null, {}],
+    query(_, options) {
+      return {
+        definition: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              notEnum: ['events', 'sets', 'self', 'documents', '__'],
+            },
+            data: {
+              type: 'object',
+              allowAdditionals: true,
+              default: {},
+              optional: true,
+            },
+            api_version: {
+              anyOf: ['integer'],
+              default: null,
+              optional: true,
+            },
+            priority: {
+              anyOf: ['number|integer|positive', 'null'],
+              default: null,
+              optional: true,
+            },
+            permissions: {
+              type: 'object',
+              default: null,
+              optional: true,
+            },
+          },
+          allowAdditionals: q.Select('allowAdditionals', options, false),
+          optionals: q.Select('optionals', options, false),
+        },
+      };
+    },
+  },
   Validate: {
     name: 'Validate',
     before,

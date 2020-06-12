@@ -5,7 +5,7 @@ import { null_ } from './null';
 describe('NullValidate', () => {
   const isItValid = isItValidAndNotSanitized(null_);
 
-  isItValid(`[null] is null`, values.null);
+  isItValid(`[null] is null`, values.null, {}, true, false);
 
   Object.entries(values)
     .filter(([key]) => !key.startsWith('null'))

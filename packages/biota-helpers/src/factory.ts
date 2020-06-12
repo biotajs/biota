@@ -15,3 +15,5 @@ export * from './factory/StringSplit';
 export * from './factory/Switch';
 export * from './factory/TypeOf';
 export * from './factory/FillTemplate';
+export * from './factory/AddUniqueItem';
+export * from './factory/RemoveItem';

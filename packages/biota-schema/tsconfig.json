@@ -2,5 +2,6 @@
   "extends": "../../tsconfig.json",
 
   "compilerOptions": {},
-  "include": ["./src/**/*", "./src/**/*.json", "package.json"]
+  "include": ["./src/**/*", "./src/**/*.json", "package.json"],
+  "exclude": ["node_modules", "./src/test", "./src/**/*.test.ts", "./src/__test__"]
 }

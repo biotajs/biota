@@ -24,10 +24,9 @@ export const null_: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
         constructors.FormatDefinition.response(options),
         state,
         {
-          default: default_.Default.udfName(),
           type: null_.Type.udfName(),
         },
-        ['default', 'type'],
+        ['type'],
       );
     },
   },

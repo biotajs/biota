@@ -13,7 +13,7 @@ describe('annotate', () => {
     test(
       name,
       async (done) => {
-        let { response } = await global.db.query(action.log.query(name, global.ref));
+        let { response } = await global.db.query(action.Log.query(name, global.ref));
         expect(response).toHaveProperty(['data', 'name']);
         expect(response?.data?.name).toBe(name);
         expect(response?.data?.instance).toMatchObject(global.ref);

@@ -27,9 +27,10 @@ describe('CollectionValidate', () => {
   const isItValid = isItValidAndNotSanitized(collection, state);
 
   isItValid(`[collection] is collection`, values.collection);
+  isItValid(`[null] is any`, values.null, {}, false, true);
 
   Object.entries(values)
-    .filter(([key]) => !key.startsWith('collection'))
+    .filter(([key]) => !key.startsWith('collection') && !['null'].includes(key))
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not collection`, value, {}, false);
     });

@@ -4,7 +4,10 @@ import { isItValidAndNotSanitized } from '../__test__/wrapper';
 
 describe('any', () => {
   const isItValid = isItValidAndNotSanitized(any);
-  Object.entries(values).forEach(([key, value]) => {
-    isItValid(`[${key}] is any`, value);
-  });
+  isItValid(`[null] is any`, values.null, {}, true, true);
+  Object.entries(values)
+    .filter((v) => !['null'].includes(v[0]))
+    .forEach(([key, value]) => {
+      isItValid(`[${key}] is any`, value);
+    });
 });

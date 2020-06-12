@@ -5,11 +5,6 @@ import { validate } from './validate';
 describe('Validate', () => {
   const isItValid = isItValidAndNotSanitized(validate);
 
-  isItValid(`validate a simple`, values.string, { Validate: { type: 'string' } });
-  isItValid(
-    `validate all of rules`,
-    values.string,
-    { Validate: { allOf: [{ type: 'string' }, { type: 'number' }] } },
-    false,
-  );
+  isItValid(`validate a simple`, values.string, { type: 'string' });
+  isItValid(`validate all of rules`, values.string, { allOf: [{ type: 'string' }, { type: 'number' }] }, false);
 });

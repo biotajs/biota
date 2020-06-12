@@ -24,3 +24,8 @@ export * from './factory/time';
 export * from './factory/token';
 export * from './factory/constructors';
 export * from './factory/templates';
+
+// schema
+export * from './factory/schema';
+export * as schemas from './factory/schemas';
+export * from './factory/schemas';

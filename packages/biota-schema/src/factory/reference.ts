@@ -27,6 +27,7 @@ export const reference: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           default: default_.Default.udfName(),
           type: reference.Type.udfName(),
           exists: reference.exists.udfName(),
+          notExists: reference.notExists.udfName(),
         },
         ['default', 'type'],
       );
@@ -74,6 +75,29 @@ export const reference: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
             {
               wrong: q.Not(q.Var('exists')),
               type: 'reference_exists',
+            },
+          ]),
+        },
+      );
+    },
+  },
+  notExists: {
+    name: 'notExists',
+    before,
+    query(value, _, state) {
+      return q.Let(
+        {
+          notExists: q.Not(q.Exists(value)),
+        },
+        {
+          value: value,
+          valid: q.Var('notExists'),
+          sanitized: false,
+          stop: q.Not(q.Var('notExists')),
+          errors: constructors.FormatErrors.response(state, [
+            {
+              wrong: q.Not(q.Var('notExists')),
+              type: 'reference_not_exists',
             },
           ]),
         },

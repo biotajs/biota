@@ -12,8 +12,8 @@ export const Switch: types.BiotaBuilderMethodOutputAPI = build.method({
       {
         result: q.Reduce(
           q.Lambda(
-            ['switch', 'caseAction'],
-            q.If(q.Equals(value, q.Select(0, q.Var('caseAction'))), q.Select(1, q.Var('caseAction')), q.Var('switch')),
+            ['switch', 'case'],
+            q.If(q.Equals(value, q.Select(0, q.Var('case'))), q.Select(1, q.Var('case')), q.Var('switch')),
           ),
           '$$SWITCH_DEFAULT',
           q.ToArray(cases),

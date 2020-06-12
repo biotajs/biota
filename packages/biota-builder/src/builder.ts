@@ -6,9 +6,9 @@ import {
   BiotaBuilderMethodOutputAPIKeyed,
   BiotaBuilderOptions,
   BiotaBuilderOptionsActionOptions,
-} from './types';
+} from './types/builder';
 import { ExprVal, query as q } from 'faunadb';
-import { functionArgumentsNames } from './utils/functionArgumentsNames';
+import packagejson from './../package.json';
 
 function functionToExpresion(this: any, fn: BiotaBuilderDefinitionHandler, params: string[] = []) {
   return fn.apply(
@@ -19,19 +19,21 @@ function functionToExpresion(this: any, fn: BiotaBuilderDefinitionHandler, param
 
 export class Builder {
   lib?: string;
+  extension?: string;
   version?: string;
   path: string;
-  annotate: boolean;
-  action: boolean;
+  annotate: string;
+  action: string;
   actionOptions: BiotaBuilderOptionsActionOptions;
   context: any;
   defaults: BiotaBuilderDefinition;
 
   constructor(options?: BiotaBuilderOptions) {
     const {
-      annotate = false,
-      action = false,
+      annotate = null,
+      action = null,
       lib = null,
+      extension = null,
       version = null,
       path = '',
       actionOptions = {},
@@ -43,6 +45,7 @@ export class Builder {
     this.annotate = annotate;
     this.action = action;
     this.lib = lib;
+    this.extension = extension;
     this.version = version;
     this.path = path;
     this.actionOptions = { collection: 'biota.actions', ...actionOptions };
@@ -69,15 +72,16 @@ export class Builder {
 
   identity: (ctx: ExprVal) => ExprVal;
 
-  methodName(name?: string, path?: string, lib?: string, version?: string) {
-    path = path || this.path;
-    lib = lib || this.lib;
-    version = version || this.version || '';
-    const list = typeof path === 'string' && path.length > 0 ? path.split('.') : [];
-    if (name) list.push(name);
-    const libVersionned = lib ? lib + '@' + version : '';
+  methodName(options: BiotaBuilderDefinition = {}) {
+    options.path = options.path || this.path;
+    options.lib = options.lib || this.lib;
+    options.extension = options.extension || this.extension;
+    options.version = options.version || this.version || '';
+    const list = typeof options.path === 'string' && options.path.length > 0 ? options.path.split('.') : [];
+    if (options.name) list.push(options.name);
+    const libVersionned = options.lib ? options.lib + '@' + options.version : '';
     const fnName = list.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('');
-    return lib ? `${libVersionned}+${fnName}` : fnName;
+    return (options.lib ? `${libVersionned}+${fnName}` : fnName) + (options.extension ? options.extension : '');
   }
 
   methods(definitionsObject: BiotaBuilderDefinitionKeyed): BiotaBuilderMethodOutputAPIKeyed {
@@ -92,29 +96,15 @@ export class Builder {
     const self = this;
 
     const { before, query, after, context = (ctx: any) => ctx } = definition || {};
-    const methods = [before, query, after].filter((f) => typeof f === 'function');
-    const paramsList = methods.map((method) => functionArgumentsNames(method));
-    const params: string[] =
-      definition.params ||
-      this.defaults.params ||
-      (paramsList.reduce((list, params) => {
-        const isUnderscoreOnly = (item: string) => item.replace('_', '');
-        if (list.length === 0) {
-          list = params;
-        } else {
-          for (const i of Object.keys(list)) {
-            list[i] = !isUnderscoreOnly(params[i]) ? params[i] : list[i];
-          }
-        }
-        return list;
-      }, []) as string[]);
+    // const methods = [before, query, after].filter((f) => typeof f === 'function');
+    const params: string[] = definition.params || this.defaults.params || [];
 
     const extend = (bindings: Object) => (next: ExprVal) => q.Let(bindings, next);
 
     const _pipe = (a: (i: any) => any, b: (i: any) => any) => (arg: any) => b(a(arg));
     const pipe = (...ops: ((i: any) => any)[]) => ops.reduce(_pipe);
 
-    const UDFName = this.methodName(definition.name);
+    const UDFName = this.methodName(definition);
     let ctx: any = null;
 
     const makeInputsObj = (...args: any[]) => {
@@ -158,6 +148,7 @@ export class Builder {
             ref: {},
             ...inputs,
             _inputs: inputs,
+            annotate: {}, // default for annotate()
           }),
         );
 
@@ -190,9 +181,18 @@ export class Builder {
         if (definition.annotate) {
           composition.push(
             extend({
-              annotationName: definition.name,
+              annotationName: definition.annotate,
               annotationData: q.Var('data'),
-              annotationOutput: q.Var('data'),
+              annotationInputs: q.Var('annotate'),
+              data: q.Select(
+                'response',
+                q.Call(`biota.builder@${packagejson.version}+Annotate`, q.Var('ctx'), {
+                  action: q.Var('annotationName'),
+                  data: q.Var('annotationData'),
+                  input: q.Var('annotationInputs'),
+                }),
+                {},
+              ),
             }),
           );
         }
@@ -206,9 +206,21 @@ export class Builder {
         if (definition.action) {
           composition.push(
             extend({
-              actionName: definition.name,
-              actionUser: self.identity(q.Var('ctx')),
-              actionRef: q.Var('ref'),
+              actionName: definition.action,
+              // ab: q.Abort(q.Format('%@', { actionName: q.Var('actionName'), ref: q.Var('ref') })),
+              actionRef: q.Select('ref', q.Var('response'), null),
+              data: q.If(
+                q.Not(q.IsNull(q.Var('actionRef'))),
+                q.Select(
+                  'response',
+                  q.Call(`biota.builder@${packagejson.version}+ActionLog`, q.Var('ctx'), {
+                    name: q.Var('actionName'),
+                    instance: q.Var('actionRef'),
+                  }),
+                  {},
+                ),
+                '',
+              ),
             }),
           );
         }
@@ -286,7 +298,10 @@ export class Builder {
   }
 }
 
-export function scaffolds(definitions: BiotaBuilderDefinition | BiotaBuilderDefinitionKeyed): any[] {
+export function scaffolds(
+  definitions: BiotaBuilderDefinition | BiotaBuilderDefinitionKeyed,
+  createOnly = false,
+): any[] {
   const isDefinition = (obj: any) => typeof obj.udf === 'function';
   const upsertUDF = (udfDefinition: any) =>
     q.If(
@@ -301,7 +316,7 @@ export function scaffolds(definitions: BiotaBuilderDefinition | BiotaBuilderDefi
       if (isDefinition(def)) {
         queries.push({
           name: def.udfName(),
-          expression: upsertUDF(def.udf()),
+          expression: createOnly ? q.CreateFunction(def.udf()) : upsertUDF(def.udf()),
         });
       } else if (typeof def === 'object') {
         dig(def);

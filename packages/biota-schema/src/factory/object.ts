@@ -5,6 +5,8 @@ import packagejson from './../../package.json';
 import { constructors } from './constructors';
 import { default_ } from './default';
 
+const filteredProperties = ['optional', 'optionals', 'allowAdditionals', 'allOptionals', 'allDeepOptionals'];
+
 const build = new Builder({
   lib: 'biota.schema',
   version: packagejson.version,
@@ -29,7 +31,7 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           properties: object.Properties.udfName(),
         },
         ['default', 'type'],
-        ['allowAdditionals'],
+        filteredProperties,
       );
     },
   },
@@ -65,38 +67,24 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       return q.Let(
         {
           properties: q.Select('properties', options, {}),
-          propertiesDefinition: q.If(
-            q.IsObject(q.Var('properties')),
-            q.Reduce(
-              q.Lambda(
-                ['reduced', 'keyValue'],
-                q.Merge(
-                  q.Var('reduced'),
-                  q.ToObject([
-                    [
-                      q.Select(0, q.Var('keyValue')),
-                      { validate: constructors.FormatDefinition.response(q.Select(1, q.Var('keyValue'))) },
-                    ],
-                  ]),
-                ),
-              ),
-              {},
-              q.ToArray(q.Var('properties')),
-            ),
-            q.Var('properties'),
-          ),
-          hasProperties: q.IsObject(q.Var('propertiesDefinition')),
+          // ↓
+          hasProperties: q.IsObject(q.Var('properties')),
           // ↓
           allowAdditionals: q.Select('allowAdditionals', options, false),
+          optionals: q.Select('optionals', options, false),
+          deepOptionals: q.Equals(q.Var('optionals'), '*/**'),
+          allOptionals: q.Or(
+            q.Select('optionals', state, false),
+            q.Var('deepOptionals'),
+            q.Equals(q.Var('optionals'), '*'),
+          ),
           // ↓
           requiredFields: q.Select('required', options, null),
           hasRequiredFields: q.IsArray(q.Var('requiredFields')),
           // ↓
-          // generalDefinition: q.IsString(q.Var('properties')),
-          // ↓
           newState: q.Merge(state, {
-            method: 'properties',
-            // generalDefinition: q.Var('generalDefinition'),
+            object: true,
+            optionals: q.Var('deepOptionals'),
           }),
           // ↓
           // ab: q.Abort(
@@ -107,9 +95,8 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           //   }),
           // ),
           propertiesKeys: q.If(
-            // q.And(IsTrue(q.Var('generalDefinition')), IsTrue(q.Var('hasProperties'))),
             q.Var('hasProperties'),
-            q.Map(q.ToArray(q.Var('propertiesDefinition')), q.Lambda(['key', 'value'], q.Var('key'))),
+            q.Map(q.ToArray(q.Var('properties')), q.Lambda(['key', 'value'], q.Var('key'))),
             [],
           ),
           // ↓
@@ -168,10 +155,55 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
             q.Var('missingKeys'),
             q.Lambda(
               'missingKey',
-              q.Not(q.Select([q.Var('missingKey'), 'validate', 'optional'], q.Var('propertiesDefinition'), false)),
+              q.Not(
+                q.Or(q.Var('allOptionals'), q.Select([q.Var('missingKey'), 'optional'], q.Var('properties'), false)),
+              ),
             ),
           ),
+          // ab: q.Abort(
+          //   q.Format('%@', { properties: q.Var('properties'), missingKeys: q.Var('missingKeys'), requiredMissingKeys: q.Var('requiredMissingKeys') }),
+          // ),
+          missingOptionalKeys: q.Difference(q.Var('missingKeys'), q.Var('requiredMissingKeys')),
           hasRequiredMissingKeys: q.IsNonEmpty(q.Var('requiredMissingKeys')),
+          // ↓
+          /**
+           * {Optional}
+           * Make sure that we keep the optional value when a field isn't there
+           */
+          defaultObjectFromMissingOptionalKeys: q.Reduce(
+            q.Lambda(
+              ['reduced', 'key'],
+              q.If(
+                q.Contains([q.Var('key'), 'default'], q.Var('properties')),
+                q.Merge(
+                  q.Var('reduced'),
+                  q.ToObject([[q.Var('key'), q.Select([q.Var('key'), 'default'], q.Var('properties'))]]),
+                ),
+                q.Var('reduced'),
+              ),
+            ),
+            {},
+            q.Var('missingOptionalKeys'),
+          ),
+          // ↓
+          // propertiesForValidation: q.ToObject(
+          //   q.Map(
+          //     q.ToArray(q.Var('properties')),
+          //     q.Lambda(
+          //       ['key', 'value'],
+          //       [
+          //         q.Var('key'),
+          //         q.If(q.Contains('validate', q.Var('value')), q.Var('value'), { validate: q.Var('value') }),
+          //       ],
+          //     ),
+          //   ),
+          // ),
+          // ↓
+          checkedObjectArrayWithDefaults: q.Prepend(
+            q.Var('checkedObjectArray'),
+            q.ToArray(q.Var('defaultObjectFromMissingOptionalKeys')),
+          ),
+          // ab: q.Abort(q.Format('%@', { checkedObjectArrayWithDefaults: q.Var('checkedObjectArrayWithDefaults') })),
           // ↓
           result: q.If(
             q.And(
@@ -180,13 +212,10 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
               q.Not(q.Var('hasRequiredMissingKeys')),
             ),
             constructors.ArrayComposeResolver.response(
-              q.Var('checkedObjectArray'),
-              q.Var('propertiesDefinition'),
-              q.Merge(state, { object: true }),
-              {
-                validate: `biota.schema@${packagejson.version}+Validate`,
-              },
-              ['validate'],
+              q.Var('checkedObjectArrayWithDefaults'),
+              q.Var('properties'),
+              q.Var('newState'),
+              filteredProperties,
             ),
             {
               valid: q.And(
@@ -216,7 +245,7 @@ export const object: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
           sanitized: false,
           errors: q.Append(
             constructors.FormatErrors.response(
-              state,
+              q.Var('newState'),
               q.Append(
                 q.Append(
                   q.Map(

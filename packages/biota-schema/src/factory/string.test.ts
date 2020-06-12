@@ -7,6 +7,7 @@ describe('StringValidate', () => {
 
   isItValid(`[string] is string`, values.string);
   isItValid(`[string_numeric] is string`, values.string_numeric);
+  isItValid(`[null] is any`, values.null, {}, false, true);
 
   Object.entries(values)
     .filter(
@@ -22,7 +23,8 @@ describe('StringValidate', () => {
           'boolean_from_string_off',
           'number_integer_from_string',
           'number_float_from_string',
-        ].includes(key),
+        ].includes(key) &&
+        !['null'].includes(key),
     )
     .forEach(([key, value]) => {
       isItValid(`[${key}] is not string`, value, {}, false);

@@ -5,8 +5,8 @@ import packagejson from './../../package.json';
 const build = new Builder({ lib: 'biota.constants', version: packagejson.version });
 
 export const constants: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
-  strings: {
-    name: 'strings',
+  Strings: {
+    name: 'Strings',
     query() {
       return {
         SIMPLE_SEPARATOR: '_',
@@ -15,16 +15,16 @@ export const constants: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       };
     },
   },
-  stringsSelect: {
-    name: 'stringsSelect',
+  StringsSelect: {
+    name: 'StringsSelect',
     params: ['key'],
     defaults: [null],
     query(key) {
       return q.Select(key, constants.Strings.response(), null);
     },
   },
-  numbers: {
-    name: 'numbers',
+  Numbers: {
+    name: 'Numbers',
     query() {
       return {
         TS_2500_YEARS: 31556952 * 1000 * 530,
@@ -35,16 +35,16 @@ export const constants: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       };
     },
   },
-  numbersSelect: {
-    name: 'numbersSelect',
+  NumbersSelect: {
+    name: 'NumbersSelect',
     params: ['key'],
     defaults: [null],
     query(key) {
       return q.Select(key, constants.Numbers.response(), null);
     },
   },
-  patterns: {
-    name: 'patterns',
+  Patterns: {
+    name: 'Patterns',
     query() {
       return {
         DATE: '^((19|2[0-9])[0-9]{2})-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$',
@@ -61,16 +61,16 @@ export const constants: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       };
     },
   },
-  patternsSelect: {
-    name: 'patternsSelect',
+  PatternsSelect: {
+    name: 'PatternsSelect',
     params: ['key'],
     defaults: [null],
     query(key) {
       return q.Select(key, constants.Patterns.response(), null);
     },
   },
-  types: {
-    name: 'types',
+  Types: {
+    name: 'Types',
     query() {
       return {
         any: 'any',
@@ -98,8 +98,8 @@ export const constants: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
       };
     },
   },
-  typesSelect: {
-    name: 'typesSelect',
+  TypesSelect: {
+    name: 'TypesSelect',
     params: ['key'],
     defaults: [null],
     query(key) {

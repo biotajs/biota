@@ -9,13 +9,9 @@ const build = new Builder({
   path: 'default',
   defaults: { params: ['value', 'options', 'state'], defaults: [null, {}, {}] },
 });
-const before = (_, options, __) => ({
-  options: q.Merge(constructors.FormatDefinition.response(options), { type: 'array' }),
-});
 export const default_: types.BiotaBuilderMethodOutputAPIKeyed = build.methods({
   Default: {
     name: 'Default',
-    before,
     query(value, options, state) {
       return q.Let(
         {
